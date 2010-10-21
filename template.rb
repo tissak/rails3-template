@@ -184,18 +184,20 @@ run 'rails generate devise user'
 # puts "creating a User model and modifying routes for Devise..."
 # run 'rails generate devise User'
 # 
-# puts "adding a 'name' attribute to the User model"
-# if mongo_flag
-#   gsub_file 'app/models/user.rb', /end/ do
-#     <<-RUBY
-#       field :name
-#       validates_presence_of :name
-#       validates_uniqueness_of :name, :email, :case_sensitive => false
-#       attr_accessible :name, :email, :password, :password_confirmation, :remember_me
-#     end
-#     RUBY
-#   end  
-# end
+puts "adding a 'name' attribute to the User model"
+if mongo_flag
+  gsub_file 'app/models/user.rb', /end/ do
+    <<-RUBY
+      field :name
+      validates_presence_of :name
+      validates_uniqueness_of :name, :email, :case_sensitive => false
+      attr_accessible :name, :email, :password, :password_confirmation, :remember_me
+    end
+    RUBY
+  end  
+else
+  run "rails generate migration add_name_to_user name:string"
+end
 
 #----------------------------------------------------------------------------
 # Modify Devise views
@@ -423,7 +425,7 @@ if mongo_flag
 else
   append_file 'db/seeds.rb' do <<-FILE
   puts 'SETTING UP DEFAULT USER LOGIN'
-  user = User.create!(:name => 'First User', :email => 'admin@test.com', :password => 'admin', :password_confirmation => 'admin')
+  user = User.create!(:name => 'First User', :email => 'admin@test.com', :password => 'adminuser', :password_confirmation => 'adminuser')
   puts 'New user created: ' << user.name
   FILE
   end
