@@ -37,7 +37,6 @@ git :commit => "-m 'Initial commit of unmodified new Rails app'"
 # Remove the usual cruft
 #----------------------------------------------------------------------------
 puts "removing unneeded files..."
-run 'rm config/database.yml'
 run 'rm public/index.html'
 run 'rm public/favicon.ico'
 run 'rm public/images/rails.png'
