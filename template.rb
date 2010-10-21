@@ -153,46 +153,49 @@ run 'bundle install'
 puts "creating 'config/initializers/devise.rb' Devise configuration file..."
 run 'rails generate devise:install'
 run 'rails generate devise:views'
+run 'rails generate devise user'
 
-puts "modifying environment configuration files for Devise..."
-gsub_file 'config/environments/development.rb', /# Don't care if the mailer can't send/, '### ActionMailer Config'
-gsub_file 'config/environments/development.rb', /config.action_mailer.raise_delivery_errors = false/ do
-<<-RUBY
-config.action_mailer.default_url_options = { :host => 'localhost:3000' }
-  # A dummy setup for development - no deliveries, but logged
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.perform_deliveries = false
-  config.action_mailer.raise_delivery_errors = true
-  config.action_mailer.default :charset => "utf-8"
-RUBY
-end
-gsub_file 'config/environments/production.rb', /config.i18n.fallbacks = true/ do
-<<-RUBY
-config.i18n.fallbacks = true
-
-  config.action_mailer.default_url_options = { :host => 'yourhost.com' }
-  ### ActionMailer Config
-  # Setup for production - deliveries, no errors raised
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.perform_deliveries = true
-  config.action_mailer.raise_delivery_errors = false
-  config.action_mailer.default :charset => "utf-8"
-RUBY
-end
-
-puts "creating a User model and modifying routes for Devise..."
-run 'rails generate devise User'
-
-puts "adding a 'name' attribute to the User model"
-gsub_file 'app/models/user.rb', /end/ do
-<<-RUBY
-  field :name
-  validates_presence_of :name
-  validates_uniqueness_of :name, :email, :case_sensitive => false
-  attr_accessible :name, :email, :password, :password_confirmation, :remember_me
-end
-RUBY
-end
+# puts "modifying environment configuration files for Devise..."
+# gsub_file 'config/environments/development.rb', /# Don't care if the mailer can't send/, '### ActionMailer Config'
+# gsub_file 'config/environments/development.rb', /config.action_mailer.raise_delivery_errors = false/ do
+# <<-RUBY
+# config.action_mailer.default_url_options = { :host => 'localhost:3000' }
+#   # A dummy setup for development - no deliveries, but logged
+#   config.action_mailer.delivery_method = :smtp
+#   config.action_mailer.perform_deliveries = false
+#   config.action_mailer.raise_delivery_errors = true
+#   config.action_mailer.default :charset => "utf-8"
+# RUBY
+# end
+# gsub_file 'config/environments/production.rb', /config.i18n.fallbacks = true/ do
+# <<-RUBY
+# config.i18n.fallbacks = true
+# 
+#   config.action_mailer.default_url_options = { :host => 'yourhost.com' }
+#   ### ActionMailer Config
+#   # Setup for production - deliveries, no errors raised
+#   config.action_mailer.delivery_method = :smtp
+#   config.action_mailer.perform_deliveries = true
+#   config.action_mailer.raise_delivery_errors = false
+#   config.action_mailer.default :charset => "utf-8"
+# RUBY
+# end
+# 
+# puts "creating a User model and modifying routes for Devise..."
+# run 'rails generate devise User'
+# 
+# puts "adding a 'name' attribute to the User model"
+# if mongo_flag
+#   gsub_file 'app/models/user.rb', /end/ do
+#     <<-RUBY
+#       field :name
+#       validates_presence_of :name
+#       validates_uniqueness_of :name, :email, :case_sensitive => false
+#       attr_accessible :name, :email, :password, :password_confirmation, :remember_me
+#     end
+#     RUBY
+#   end  
+# end
 
 #----------------------------------------------------------------------------
 # Modify Devise views
@@ -425,6 +428,8 @@ else
   FILE
   end
 end
+
+run 'rake db:migrate' unless mongo_flag
 run 'rake db:seed'
 
 #----------------------------------------------------------------------------
