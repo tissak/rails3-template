@@ -1,8 +1,7 @@
 # Application Generator Template
-# Modifies a Rails app to use Mongoid and Devise
 # Usage: rails new app_name -m http://github.com/fortuity/rails3-mongoid-devise/raw/master/template.rb
 
-# More info: http://github.com/fortuity/rails3-mongoid-devise/
+# Based on: http://github.com/fortuity/rails3-mongoid-devise/
 
 # If you are customizing this template, you can use any methods provided by Thor::Actions
 # http://rdoc.info/rdoc/wycats/thor/blob/f939a3e8a854616784cac1dcff04ef4f3ee5f7ff/Thor/Actions.html
@@ -10,10 +9,40 @@
 # http://github.com/rails/rails/blob/master/railties/lib/rails/generators/actions.rb
 
 def console_log(msg)
-  puts "\n    #{msg}"
+  say "\n    #{msg}", :yellow
 end
 
-console_log "Modifying a new Rails app.."
+console_log "Modifying a new Rails app..\n"
+
+#----------------------------------------------------------------------------
+# Capistrano
+#----------------------------------------------------------------------------
+console_log "Adding capistrano gem support"
+gem "capistrano"
+gem "capistrano-ext"
+run 'bundle install'
+capify!
+run "mkdir -p config/deploy"
+run "touch config/deploy/development.rb"
+run "touch config/deploy/staging.rb"
+run "touch config/deploy/production.rb"
+
+#----------------------------------------------------------------------------
+# Staging environment
+#----------------------------------------------------------------------------
+console_log "Adding staging environment support"
+run "cp config/environments/development.rb config/environments/staging.rb"
+append_file 'config/database.yml' do
+  <<-CONFIG
+
+staging:
+  adapter: sqlite3
+  database: db/staging.sqlite3
+  pool: 5
+  timeout: 5000
+CONFIG
+end
+
 #----------------------------------------------------------------------------
 # Configure
 #----------------------------------------------------------------------------
