@@ -15,6 +15,20 @@ end
 console_log "Modifying a new Rails app..\n"
 
 #----------------------------------------------------------------------------
+# Configure
+#----------------------------------------------------------------------------
+
+# haml_flag = yes?('Would you like to use the Haml template system? (yes/no)')
+haml_flag = true
+# jquery_flag = yes?('Would you like to use jQuery instead of Prototype? (yes/no)')
+jquery_flag = true
+
+heroku_flag = yes?('Heroku gem? (y/n)')
+ey_flag = yes?('Engine Yard gem? (y/n)')
+mongo_flag = yes?('Use Mongo? (y/n)')
+ban_spiders_flag = yes?('Ban spiders? (y/n)')
+
+#----------------------------------------------------------------------------
 # Capistrano
 #----------------------------------------------------------------------------
 console_log "Adding capistrano gem support"
@@ -42,20 +56,6 @@ staging:
   timeout: 5000
 CONFIG
 end
-
-#----------------------------------------------------------------------------
-# Configure
-#----------------------------------------------------------------------------
-
-# haml_flag = yes?('Would you like to use the Haml template system? (yes/no)')
-haml_flag = true
-# jquery_flag = yes?('Would you like to use jQuery instead of Prototype? (yes/no)')
-jquery_flag = true
-
-heroku_flag = yes?('Heroku gem? (y/n)')
-ey_flag = yes?('Engine Yard gem? (y/n)')
-mongo_flag = yes?('Use Mongo? (y/n)')
-ban_spiders_flag = yes?('Ban spiders? (y/n)')
 
 #----------------------------------------------------------------------------
 # Set up git
