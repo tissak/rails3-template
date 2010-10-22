@@ -378,22 +378,6 @@ end
 
 
 #----------------------------------------------------------------------------
-# Add Stylesheets
-#----------------------------------------------------------------------------
-create_file 'public/stylesheets/application.css' do <<-FILE
-ul.hmenu {
-  list-style: none;	
-  margin: 0 0 2em;
-  padding: 0;
-}
-
-ul.hmenu li {
-  display: inline;  
-}
-FILE
-end
-
-#----------------------------------------------------------------------------
 # Create a default user
 #----------------------------------------------------------------------------
 console_log "creating a default user"
