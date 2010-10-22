@@ -9,22 +9,29 @@
 # and Rails::Generators::Actions
 # http://github.com/rails/rails/blob/master/railties/lib/rails/generators/actions.rb
 
-puts "Modifying a new Rails app to use Mongoid and Devise..."
-puts "Any problems? See http://github.com/fortuity/rails3-mongoid-devise/issues"
+def console_log(msg)
+  puts "\n    #{msg}"
+end
 
+console_log "Modifying a new Rails app.."
 #----------------------------------------------------------------------------
 # Configure
 #----------------------------------------------------------------------------
 
-haml_flag = yes?('Would you like to use the Haml template system? (yes/no)')
-jquery_flag = yes?('Would you like to use jQuery instead of Prototype? (yes/no)')
-heroku_flag = yes?('Do you want to install the Heroku gem so you can deploy to Heroku? (yes/no)')
-mongo_flag = yes?('Do you want to use mongo? (yes/no)')
+# haml_flag = yes?('Would you like to use the Haml template system? (yes/no)')
+haml_flag = true
+# jquery_flag = yes?('Would you like to use jQuery instead of Prototype? (yes/no)')
+jquery_flag = true
+
+heroku_flag = yes?('Heroku gem? (y/n)')
+ey_flag = yes?('Engine Yard gem? (y/n)')
+mongo_flag = yes?('Use Mongo? (y/n)')
+ban_spiders_flag = yes?('Ban spiders? (y/n)')
 
 #----------------------------------------------------------------------------
 # Set up git
 #----------------------------------------------------------------------------
-puts "setting up source control with 'git'..."
+console_log "setting up source control with 'git'..."
 # specific to Mac OS X
 append_file '.gitignore' do
   '.DS_Store'
@@ -36,30 +43,40 @@ git :commit => "-m 'Initial commit of unmodified new Rails app'"
 #----------------------------------------------------------------------------
 # Remove the usual cruft
 #----------------------------------------------------------------------------
-puts "removing unneeded files..."
+console_log "removing unneeded files..."
 run 'rm public/index.html'
 run 'rm public/favicon.ico'
 run 'rm public/images/rails.png'
 run 'rm README'
 run 'touch README'
 
-puts "banning spiders from your site by changing robots.txt..."
-gsub_file 'public/robots.txt', /# User-Agent/, 'User-Agent'
-gsub_file 'public/robots.txt', /# Disallow/, 'Disallow'
+if ban_spiders_flag
+  console_log "banning spiders from your site by changing robots.txt..."
+  gsub_file 'public/robots.txt', /# User-Agent/, 'User-Agent'
+  gsub_file 'public/robots.txt', /# Disallow/, 'Disallow'
+end
 
 #----------------------------------------------------------------------------
 # Heroku Option
 #----------------------------------------------------------------------------
 if heroku_flag
-  puts "adding Heroku gem to the Gemfile..."
+  console_log "adding Heroku gem to the Gemfile..."
   gem 'heroku', '1.10.6', :group => :development
+end
+
+#----------------------------------------------------------------------------
+# Engine Yard Option
+#----------------------------------------------------------------------------
+if ey_flag
+  console_log "adding Engine Yard gem to the Gemfile..."
+  gem 'engineyard', :group => :development
 end
 
 #----------------------------------------------------------------------------
 # Haml Option
 #----------------------------------------------------------------------------
 if haml_flag
-  puts "setting up Gemfile for Haml..."
+  console_log "setting up Gemfile for Haml..."
   append_file 'Gemfile', "\n# Bundle gems needed for Haml\n"
   gem 'haml', '3.0.18'
   gem 'haml-rails', '0.2', :group => :development
@@ -79,19 +96,19 @@ end
 # Set up Mongoid
 #----------------------------------------------------------------------------
 if mongo_flag
-  puts "setting up Gemfile for Mongoid..."
+  console_log "setting up Gemfile for Mongoid..."
   gsub_file 'Gemfile', /gem \'sqlite3-ruby/, '# gem \'sqlite3-ruby'
   append_file 'Gemfile', "\n# Bundle gems needed for Mongoid\n"
   gem "mongoid", "2.0.0.beta.19"
   gem 'bson_ext', '1.1'
 
-  puts "installing Mongoid gems (takes a few minutes!)..."
+  console_log "installing Mongoid gems (takes a few minutes!)..."
   run 'bundle install'
 
-  puts "creating 'config/mongoid.yml' Mongoid configuration file..."
+  console_log "creating 'config/mongoid.yml' Mongoid configuration file..."
   run 'rails generate mongoid:config'
 
-  puts "modifying 'config/application.rb' file for Mongoid..."
+  console_log "modifying 'config/application.rb' file for Mongoid..."
   gsub_file 'config/application.rb', /require 'rails\/all'/ do
   <<-RUBY
   # If you are deploying to Heroku and MongoHQ,
@@ -127,7 +144,7 @@ if mongo_flag
   end
 end
 
-puts "prevent logging of passwords"
+console_log "prevent logging of passwords"
 gsub_file 'config/application.rb', /:password/, ':password, :password_confirmation'
 
 #----------------------------------------------------------------------------
@@ -135,7 +152,7 @@ gsub_file 'config/application.rb', /:password/, ':password, :password_confirmati
 #----------------------------------------------------------------------------
 if jquery_flag
   run 'rm public/javascripts/rails.js'
-  puts "replacing Prototype with jQuery"
+  console_log "replacing Prototype with jQuery"
   # "--ui" enables optional jQuery UI
   run 'rails generate jquery:install --ui'
 end
@@ -143,34 +160,39 @@ end
 #----------------------------------------------------------------------------
 # Set up Devise
 #----------------------------------------------------------------------------
-puts "setting up Gemfile for Devise..."
+console_log "setting up Gemfile for Devise..."
 append_file 'Gemfile', "\n# Bundle gem needed for Devise\n"
 gem 'devise', '1.1.3'
 
-puts "installing Devise gem (takes a few minutes!)..."
+console_log "installing Devise gem (takes a few minutes!)..."
 run 'bundle install'
 
-puts "creating 'config/initializers/devise.rb' Devise configuration file..."
+console_log "creating 'config/initializers/devise.rb' Devise configuration file..."
 run 'rails generate devise:install'
 run 'rails generate devise:views'
+console_log "creating a User model and modifying routes for Devise..."
 run 'rails generate devise user'
 
-# puts "modifying environment configuration files for Devise..."
-# gsub_file 'config/environments/development.rb', /# Don't care if the mailer can't send/, '### ActionMailer Config'
-# gsub_file 'config/environments/development.rb', /config.action_mailer.raise_delivery_errors = false/ do
-# <<-RUBY
-# config.action_mailer.default_url_options = { :host => 'localhost:3000' }
-#   # A dummy setup for development - no deliveries, but logged
-#   config.action_mailer.delivery_method = :smtp
-#   config.action_mailer.perform_deliveries = false
-#   config.action_mailer.raise_delivery_errors = true
-#   config.action_mailer.default :charset => "utf-8"
-# RUBY
-# end
+#----------------------------------------------------------------------------
+# Envronments & Mailers
+#----------------------------------------------------------------------------
+console_log "modifying environment configuration files..."
+gsub_file 'config/environments/development.rb', /# Don't care if the mailer can't send/, '### ActionMailer Config'
+gsub_file 'config/environments/development.rb', /config.action_mailer.raise_delivery_errors = false/ do
+<<-RUBY
+config.action_mailer.default_url_options = { :host => 'localhost:3000' }
+  # A dummy setup for development - no deliveries, but logged
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = false
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.default :charset => "utf-8"
+RUBY
+end
+
 # gsub_file 'config/environments/production.rb', /config.i18n.fallbacks = true/ do
 # <<-RUBY
 # config.i18n.fallbacks = true
-# 
+#   
 #   config.action_mailer.default_url_options = { :host => 'yourhost.com' }
 #   ### ActionMailer Config
 #   # Setup for production - deliveries, no errors raised
@@ -180,73 +202,15 @@ run 'rails generate devise user'
 #   config.action_mailer.default :charset => "utf-8"
 # RUBY
 # end
-# 
-# puts "creating a User model and modifying routes for Devise..."
-# run 'rails generate devise User'
-# 
-puts "adding a 'name' attribute to the User model"
-if mongo_flag
-  gsub_file 'app/models/user.rb', /end/ do
-    <<-RUBY
-      field :name
-      validates_presence_of :name
-      validates_uniqueness_of :name, :email, :case_sensitive => false
-      attr_accessible :name, :email, :password, :password_confirmation, :remember_me
-    end
-    RUBY
-  end  
-else
-  run "rails generate migration add_name_to_user name:string"
-end
-
-#----------------------------------------------------------------------------
-# Modify Devise views
-#----------------------------------------------------------------------------
-puts "modifying the default Devise user registration to add 'name'..."
-if haml_flag
-   inject_into_file "app/views/devise/registrations/edit.html.haml", :after => "= devise_error_messages!\n" do
-<<-RUBY
-  %p
-    = f.label :name
-    %br/
-    = f.text_field :name
-RUBY
-   end
-else
-   inject_into_file "app/views/devise/registrations/edit.html.erb", :after => "<%= devise_error_messages! %>\n" do
-<<-RUBY
-  <p><%= f.label :name %><br />
-  <%= f.text_field :name %></p>
-RUBY
-   end
-end
-
-if haml_flag
-   inject_into_file "app/views/devise/registrations/new.html.haml", :after => "= devise_error_messages!\n" do
-<<-RUBY
-  %p
-    = f.label :name
-    %br/
-    = f.text_field :name
-RUBY
-   end
-else
-   inject_into_file "app/views/devise/registrations/new.html.erb", :after => "<%= devise_error_messages! %>\n" do
-<<-RUBY
-  <p><%= f.label :name %><br />
-  <%= f.text_field :name %></p>
-RUBY
-   end
-end
 
 #----------------------------------------------------------------------------
 # Create a home page
 #----------------------------------------------------------------------------
-puts "create a home controller and view"
+console_log "create a home controller and view"
 generate(:controller, "home index")
 gsub_file 'config/routes.rb', /get \"home\/index\"/, 'root :to => "home#index"'
 
-puts "set up a simple demonstration of Devise"
+console_log "set up a simple demonstration of Devise"
 gsub_file 'app/controllers/home_controller.rb', /def index/ do
 <<-RUBY
 def index
@@ -260,13 +224,13 @@ if haml_flag
   create_file 'app/views/home/index.html.haml' do 
 <<-'FILE'
 - @users.each do |user|
-  %p User: #{link_to user.name, user}
+  %p User: #{link_to user.email, user}
 FILE
   end
 else
   append_file 'app/views/home/index.html.erb' do <<-FILE
 <% @users.each do |user| %>
-  <p>User: <%=link_to user.name, user %></p>
+  <p>User: <%=link_to user.email, user %></p>
 <% end %>
   FILE
   end
@@ -281,6 +245,12 @@ gsub_file 'config/routes.rb', /devise_for :users/ do
 <<-RUBY
 devise_for :users
   resources :users, :only => :show
+  
+  devise_scope :user do
+    get "register"  => "devise/registrations#new" 
+    get "login"  => "devise/sessions#new"    
+    get "logout" => "devise/sessions#destroy"
+  end 
 RUBY
 end
 
@@ -298,12 +268,12 @@ if haml_flag
   # we have to use single-quote-style-heredoc to avoid interpolation
   create_file 'app/views/users/show.html.haml' do <<-'FILE'
 %p
-  User: #{@user.name}
+  User: #{@user.email}
   FILE
   end
 else
   append_file 'app/views/users/show.html.erb' do <<-FILE
-<p>User: <%= @user.name %></p>
+<p>User: <%= @user.email %></p>
   FILE
   end
 end
@@ -361,37 +331,22 @@ end
 #----------------------------------------------------------------------------
 # Generate Application Layout
 #----------------------------------------------------------------------------
+console_log "Setting up default nifty layout"
+
+# remove standard layout
+run 'rm app/views/layouts/application.html.erb'
+
+# generate a new one
+append_file 'Gemfile', "\n# Bundle gems needed for Nifty Generators\n"
+gem "nifty-generators"
+run 'bundle install'
+
 if haml_flag
-  run 'rm app/views/layouts/application.html.erb'
-  create_file 'app/views/layouts/application.html.haml' do <<-FILE
-!!!
-%html
-  %head
-    %title Testapp
-    = stylesheet_link_tag :all
-    = javascript_include_tag :defaults
-    = csrf_meta_tag
-  %body
-    %ul.hmenu
-      = render 'devise/menu/registration_items'
-      = render 'devise/menu/login_items'
-    %p{:style => "color: green"}= notice
-    %p{:style => "color: red"}= alert
-    = yield
-FILE
-  end
+  run "rails generate nifty:layout --haml"
 else
-  inject_into_file 'app/views/layouts/application.html.erb', :after => "<body>\n" do
-  <<-RUBY
-<ul class="hmenu">
-  <%= render 'devise/menu/registration_items' %>
-  <%= render 'devise/menu/login_items' %>
-</ul>
-<p style="color: green"><%= notice %></p>
-<p style="color: red"><%= alert %></p>
-RUBY
-  end
+  run "rails generate nifty:layout"
 end
+
 
 #----------------------------------------------------------------------------
 # Add Stylesheets
@@ -412,21 +367,21 @@ end
 #----------------------------------------------------------------------------
 # Create a default user
 #----------------------------------------------------------------------------
-puts "creating a default user"
+console_log "creating a default user"
 if mongo_flag
   append_file 'db/seeds.rb' do <<-FILE
   puts 'EMPTY THE MONGODB DATABASE'
   Mongoid.master.collections.reject { |c| c.name == 'system.indexes'}.each(&:drop)
   puts 'SETTING UP DEFAULT USER LOGIN'
-  user = User.create! :name => 'First User', :email => 'user@test.com', :password => 'please', :password_confirmation => 'please'
-  puts 'New user created: ' << user.name
+  user = User.create!(:email => 'admin@test.com', :password => 'adminuser', :password_confirmation => 'adminuser')
+  puts 'New user created: ' << user.email
   FILE
   end
 else
   append_file 'db/seeds.rb' do <<-FILE
   puts 'SETTING UP DEFAULT USER LOGIN'
-  user = User.create!(:name => 'First User', :email => 'admin@test.com', :password => 'adminuser', :password_confirmation => 'adminuser')
-  puts 'New user created: ' << user.name
+  user = User.create!(:email => 'admin@test.com', :password => 'adminuser', :password_confirmation => 'adminuser')
+  puts 'New user created: ' << user.email
   FILE
   end
 end
@@ -437,8 +392,8 @@ run 'rake db:seed'
 #----------------------------------------------------------------------------
 # Finish up
 #----------------------------------------------------------------------------
-puts "checking everything into git..."
+console_log "checking everything into git..."
 git :add => '.'
-git :commit => "-am 'modified Rails app to use Mongoid and Devise'"
+git :commit => "-am 'modified Rails app completed via template generation'"
 
-puts "Done setting up your Rails app with Mongoid and Devise."
+console_log "Done setting up your Rails app"
